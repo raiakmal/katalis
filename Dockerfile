@@ -1,6 +1,6 @@
 FROM php:7.4-fpm-alpine
 
-# 1. Install dependensi sistem termasuk libzip-dev
+# Install dependencies
 RUN apk update && apk add --no-cache \
     nginx \
     git \
@@ -11,9 +11,16 @@ RUN apk update && apk add --no-cache \
     libzip-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip
 
-# 2. Konfigurasi Nginx
+# Nginx config
 COPY <<EOF /etc/nginx/http.d/default.conf
 server {
     listen 80;
@@ -34,20 +41,38 @@ server {
 EOF
 
 WORKDIR /var/www/html
+
 COPY . .
 
-# Install Composer dependencies
+# Composer
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# PASTIKAN FOLDER STORAGE & CACHE LENGKAP DAN PUNYA HAK AKSES
-RUN mkdir -p storage/framework/sessions \
-    && mkdir -p storage/framework/views \
-    && mkdir -p storage/framework/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction
+
+# Prepare Laravel folders at build time too
+RUN mkdir -p \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    storage/logs \
+    bootstrap/cache
+
+RUN chown -R www-data:www-data \
+    storage \
+    bootstrap/cache
+
+RUN chmod -R 775 \
+    storage \
+    bootstrap/cache
+
+# Entry point
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
 
-CMD php-fpm -D && nginx -g "daemon off;"
-
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
