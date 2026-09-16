@@ -36,14 +36,18 @@ EOF
 WORKDIR /var/www/html
 COPY . .
 
-# 3. Install Composer 2.2 LTS
+# Install Composer dependencies
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# 4. Set permission direktori Laravel
-RUN chown -R www-data:www-data storage bootstrap/cache
+# PASTIKAN FOLDER STORAGE & CACHE LENGKAP DAN PUNYA HAK AKSES
+RUN mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/framework/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
 
-# 5. Jalankan PHP-FPM dan Nginx
 CMD php-fpm -D && nginx -g "daemon off;"
+
