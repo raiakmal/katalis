@@ -1,0 +1,99 @@
+# =========================
+# Laravel
+# =========================
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor
+/node_modules
+
+# Composer
+composer.phar
+
+# NPM
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Laravel Logs
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# Laravel Cache
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# Storage
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+
+/storage/app/public
+/public/storage
+
+# PHPUnit
+.phpunit.result.cache
+
+# Pest
+.pest.cache
+
+# IDE
+/.idea
+/.vscode
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Laravel Pint
+.pint.cache
+
+# Rector
+.rector
+
+# PHPStan
+/phpstan.neon.cache
+
+# Coverage
+coverage/
+coverage.xml
+
+# Build Files
+/public/build
+/public/hot
+/mix-manifest.json
+
+# Temporary Files
+*.log
+*.cache
+*.tmp
+*.swp
+*.swo
+
+# Backup Files
+*.bak
+
+# Docker (opsional)
+docker-compose.override.yml
+
+# Railway / Vercel / Deploy (opsional)
+.vercel
+.railway
+
+# Misc
+*.sqlite
