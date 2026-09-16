@@ -1,6 +1,6 @@
 FROM php:7.4-fpm-alpine
 
-# Install ekstensi PHP & dependensi yang diperlukan Laravel via apk
+# 1. Install dependensi sistem termasuk libzip-dev
 RUN apk update && apk add --no-cache \
     nginx \
     git \
@@ -8,11 +8,12 @@ RUN apk update && apk add --no-cache \
     libpng-dev \
     libxml2-dev \
     oniguruma-dev \
+    libzip-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Konfigurasi Nginx
+# 2. Konfigurasi Nginx
 COPY <<EOF /etc/nginx/http.d/default.conf
 server {
     listen 80;
@@ -35,14 +36,14 @@ EOF
 WORKDIR /var/www/html
 COPY . .
 
-# Install Composer 2.2 LTS
+# 3. Install Composer 2.2 LTS
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Permission folder storage & bootstrap
+# 4. Set permission direktori Laravel
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 80
 
-# Jalankan PHP-FPM dan Nginx bersamaan
+# 5. Jalankan PHP-FPM dan Nginx
 CMD php-fpm -D && nginx -g "daemon off;"
