@@ -1,6 +1,5 @@
 FROM php:7.4-fpm-alpine
 
-# Install dependencies
 RUN apk update && apk add --no-cache \
     nginx \
     git \
@@ -20,7 +19,6 @@ RUN apk update && apk add --no-cache \
     gd \
     zip
 
-# Nginx config
 COPY <<EOF /etc/nginx/http.d/default.conf
 server {
     listen 80;
@@ -44,7 +42,6 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# Composer
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 
 RUN composer install \
@@ -52,7 +49,7 @@ RUN composer install \
     --optimize-autoloader \
     --no-interaction
 
-# Prepare Laravel folders at build time too
+# Buat juga saat build
 RUN mkdir -p \
     storage/framework/sessions \
     storage/framework/views \
@@ -68,7 +65,7 @@ RUN chmod -R 775 \
     storage \
     bootstrap/cache
 
-# Entry point
+# Runtime script
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
