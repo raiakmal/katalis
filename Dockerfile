@@ -1,3 +1,6 @@
+# ==========================================
+# 1. Build Frontend Assets
+# ==========================================
 FROM node:20-alpine AS frontend
 
 WORKDIR /app
@@ -8,9 +11,12 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+RUN npm run production
 
 
+# ==========================================
+# 2. Laravel + PHP + Nginx
+# ==========================================
 FROM php:7.4-fpm-alpine
 
 RUN apk update && apk add --no-cache \
@@ -31,6 +37,10 @@ RUN apk update && apk add --no-cache \
     bcmath \
     gd \
     zip
+
+# ==========================================
+# Nginx
+# ==========================================
 
 COPY <<EOF /etc/nginx/http.d/default.conf
 server {
@@ -55,8 +65,9 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# Ambil hasil build Vite
-COPY --from=frontend /app/public/build ./public/build
+# ==========================================
+# Composer
+# ==========================================
 
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 
@@ -65,6 +76,19 @@ RUN composer install \
     --optimize-autoloader \
     --no-interaction
 
+# ==========================================
+# Copy hasil Laravel Mix
+# ==========================================
+
+COPY --from=frontend /app/public/css ./public/css
+COPY --from=frontend /app/public/js ./public/js
+
+COPY --from=frontend /app/public/mix-manifest.json ./public/mix-manifest.json
+
+# ==========================================
+# Laravel storage
+# ==========================================
+
 RUN mkdir -p \
     storage/framework/sessions \
     storage/framework/views \
@@ -72,10 +96,20 @@ RUN mkdir -p \
     storage/logs \
     bootstrap/cache
 
-RUN chown -R www-data:www-data storage bootstrap/cache
-RUN chmod -R 775 storage bootstrap/cache
+RUN chown -R www-data:www-data \
+    storage \
+    bootstrap/cache
+
+RUN chmod -R 775 \
+    storage \
+    bootstrap/cache
+
+# ==========================================
+# Entrypoint
+# ==========================================
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
