@@ -1,3 +1,16 @@
+FROM node:20-alpine AS frontend
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+
 FROM php:7.4-fpm-alpine
 
 RUN apk update && apk add --no-cache \
@@ -42,6 +55,9 @@ WORKDIR /var/www/html
 
 COPY . .
 
+# Ambil hasil build Vite
+COPY --from=frontend /app/public/build ./public/build
+
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 
 RUN composer install \
@@ -49,7 +65,6 @@ RUN composer install \
     --optimize-autoloader \
     --no-interaction
 
-# Buat juga saat build
 RUN mkdir -p \
     storage/framework/sessions \
     storage/framework/views \
@@ -57,17 +72,10 @@ RUN mkdir -p \
     storage/logs \
     bootstrap/cache
 
-RUN chown -R www-data:www-data \
-    storage \
-    bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache
 
-RUN chmod -R 775 \
-    storage \
-    bootstrap/cache
-
-# Runtime script
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
